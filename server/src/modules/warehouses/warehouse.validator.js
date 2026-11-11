@@ -1,0 +1,52 @@
+/**
+ * StockPilot WMS - Warehouse request validation schemas.
+ *
+ * @license MIT
+ * @copyright 2026 StockPilot WMS contributors
+ */
+import { z } from 'zod';
+import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/pagination.js';
+
+const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid identifier');
+
+const addressSchema = z.object({
+  line1: z.string().trim().max(100).optional().default(''),
+  line2: z.string().trim().max(100).optional().default(''),
+  city: z.string().trim().max(50).optional().default(''),
+  state: z.string().trim().max(50).optional().default(''),
+  postalCode: z.string().trim().max(20).optional().default(''),
+  country: z.string().trim().max(50).optional().default(''),
+});
+
+export const warehouseIdParamsSchema = z.object({ id: objectId });
+
+export const createWarehouseBodySchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(2)
+    .max(20)
+    .transform((val) => val.toUpperCase()),
+  name: z.string().trim().min(2).max(100),
+  address: addressSchema.optional().default(() => ({})),
+});
+
+export const updateWarehouseBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(100).optional(),
+    address: addressSchema.optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((val) => Object.keys(val).length > 0, {
+    message: 'At least one field must be provided',
+  });
+
+export const listWarehousesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
+  search: z.string().trim().max(100).optional(),
+  isActive: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true')
+    .optional(),
+});

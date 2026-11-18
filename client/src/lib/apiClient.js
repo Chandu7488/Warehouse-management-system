@@ -50,9 +50,8 @@ apiClient.interceptors.response.use(
         await apiClient.post('/auth/refresh');
         return apiClient(originalRequest);
       } catch (refreshError) {
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+        // Do not force a hard reload with window.location.href if already on /login
+        // React Router ProtectedRoute handles routing gracefully without triggering 404 full-page reloads
         return Promise.reject(refreshError);
       }
     }

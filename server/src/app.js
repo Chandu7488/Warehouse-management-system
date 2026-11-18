@@ -23,6 +23,9 @@ import { connectDatabase } from './config/database.js';
 
 const app = express();
 
+// Trust reverse proxy (Vercel, AWS Lambda, Nginx) so client IP and protocol headers are correctly handled
+app.set('trust proxy', 1);
+
 const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 1000,

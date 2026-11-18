@@ -19,10 +19,18 @@ const envSchema = z.object({
   MONGODB_URI: z
     .string()
     .regex(MONGODB_URI_PATTERN, 'MONGODB_URI must start with mongodb:// or mongodb+srv://')
-    .default('mongodb+srv://stockpilot:stockpilot_cloud@cluster0.mongodb.net/stockpilot_wms?retryWrites=true&w=majority'),
+    .default(
+      'mongodb+srv://stockpilot_app:6AEQw8xOgQGlq5cd@stockpilot-cluster.y3hhofr.mongodb.net/stockpilot_wms?retryWrites=true&w=majority',
+    ),
   CLIENT_URL: z.string().default('http://localhost:5173'),
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(32, 'JWT_ACCESS_SECRET must be at least 32 characters')
+    .default('9708b27a71e11cee384e51ad23e0f8de079697a3f47319f0f673d0626371242196705f1d449f98982e56f2827a187a3f'),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32, 'JWT_REFRESH_SECRET must be at least 32 characters')
+    .default('7fd17448d2aa2da83562e2894f69fad0a899586ed866817d9017a1e71dc907538f978903a44ae7ca02475c21f92c95d8'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   COOKIE_SECURE: z

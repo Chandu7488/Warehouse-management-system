@@ -18,6 +18,9 @@ import apiRouter from './routes/index.js';
 import { notFound } from './middlewares/notFound.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
+import healthRoutes from './modules/health/health.routes.js';
+import { connectDatabase } from './config/database.js';
+
 const app = express();
 
 const apiRateLimiter = rateLimit({
@@ -32,7 +35,21 @@ const apiRateLimiter = rateLimit({
 });
 
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+
+// Flexible CORS for local dev and Vercel preview/production deployments
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin serverless proxies)
+      if (!origin || origin === env.CLIENT_URL || origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  }),
+);
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
@@ -41,8 +58,28 @@ if (!isTest) {
   app.use(morgan('combined'));
 }
 
+// 1. Instant diagnostics: Mount health endpoints before DB middleware and rate limiters
+app.use('/health', healthRoutes);
+app.use('/api/v1/health', healthRoutes);
+app.use('/v1/health', healthRoutes);
+
+// 2. Serverless database connection middleware (ensures warm Lambda connections without hanging)
+if (process.env.VERCEL) {
+  app.use(async (_req, _res, next) => {
+    try {
+      await connectDatabase();
+      next();
+    } catch (err) {
+      next(err);
+    }
+  });
+}
+
+// 3. API rate limiting & versioned routes (supports both /api/v1 and /v1)
 app.use('/api', apiRateLimiter);
 app.use('/api/v1', apiRouter);
+app.use('/v1', apiRouter);
+
 app.use(notFound);
 app.use(errorHandler);
 

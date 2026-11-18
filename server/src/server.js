@@ -46,7 +46,12 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-start().catch((error) => {
-  logger.error('Failed to start server', { message: error.message });
-  process.exit(1);
-});
+// Only start HTTP listener when not in a Vercel serverless environment
+if (!process.env.VERCEL) {
+  start().catch((error) => {
+    logger.error('Failed to start server', { message: error.message });
+    process.exit(1);
+  });
+}
+
+export default app;

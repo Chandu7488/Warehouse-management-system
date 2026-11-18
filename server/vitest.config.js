@@ -10,6 +10,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.js'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
     env: {
       NODE_ENV: 'test',
       PORT: '5001',

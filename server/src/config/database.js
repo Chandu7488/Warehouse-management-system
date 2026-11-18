@@ -18,25 +18,52 @@ const READY_STATES = Object.freeze({
   3: 'disconnecting',
 });
 
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 /**
- * Opens the MongoDB connection using the configured URI.
+ * Opens or retrieves the cached MongoDB connection using the configured URI.
+ * Implements global singleton connection caching for serverless warm invocations.
  *
  * @returns {Promise<typeof mongoose>} The connected Mongoose instance.
- * @throws {Error} When the initial connection fails.
+ * @throws {Error} When the connection fails.
  */
 export const connectDatabase = async () => {
-  mongoose.set('strictQuery', true);
-  mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
-  mongoose.connection.on('reconnected', () => logger.info('MongoDB reconnected'));
-  mongoose.connection.on('error', (error) =>
-    logger.error('MongoDB error', { message: error.message }),
-  );
-  await mongoose.connect(env.MONGODB_URI, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 10000,
-  });
-  logger.info('MongoDB connected', { database: mongoose.connection.name });
-  return mongoose;
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    mongoose.set('strictQuery', true);
+    mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
+    mongoose.connection.on('reconnected', () => logger.info('MongoDB reconnected'));
+    mongoose.connection.on('error', (error) =>
+      logger.error('MongoDB error', { message: error.message }),
+    );
+
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 3500,
+    };
+
+    cached.promise = mongoose.connect(env.MONGODB_URI, opts).then((m) => {
+      logger.info('MongoDB connected', { database: mongoose.connection.name });
+      return m;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
 };
 
 /**

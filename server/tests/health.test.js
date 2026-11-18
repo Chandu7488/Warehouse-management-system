@@ -8,13 +8,27 @@ import { describe, expect, it } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
 
-describe('GET /api/v1/health', () => {
-  it('returns the standard success envelope', async () => {
+describe('GET /api/v1/health, /health and /v1/health', () => {
+  it('returns the standard success envelope on /api/v1/health', async () => {
     const response = await request(app).get('/api/v1/health');
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data.status).toBe('ok');
     expect(response.body.data).toHaveProperty('database');
+  });
+
+  it('returns the standard success envelope on /health', async () => {
+    const response = await request(app).get('/health');
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.status).toBe('ok');
+  });
+
+  it('returns the standard success envelope on /v1/health', async () => {
+    const response = await request(app).get('/v1/health');
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.status).toBe('ok');
   });
 });
 

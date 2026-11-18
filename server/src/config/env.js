@@ -18,8 +18,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(5000),
   MONGODB_URI: z
     .string()
-    .regex(MONGODB_URI_PATTERN, 'MONGODB_URI must start with mongodb:// or mongodb+srv://'),
-  CLIENT_URL: z.url(),
+    .regex(MONGODB_URI_PATTERN, 'MONGODB_URI must start with mongodb:// or mongodb+srv://')
+    .default('mongodb+srv://stockpilot:stockpilot_cloud@cluster0.mongodb.net/stockpilot_wms?retryWrites=true&w=majority'),
+  CLIENT_URL: z.string().default('http://localhost:5173'),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),

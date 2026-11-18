@@ -172,6 +172,10 @@ beforeAll(async () => {
       reserved: 0,
     },
   ]);
+
+  // Pre-create collection and indexes before starting multi-document transactions in in-memory replica set
+  await StockLedgerEntry.createCollection();
+  await StockLedgerEntry.init();
 });
 
 afterAll(async () => {

@@ -73,11 +73,7 @@ const validateMovementLeg = async (movement, session = null) => {
   }
 
   const locationId = rawLocation?._id || rawLocation;
-  const locationQuery = Location.findById(locationId);
-  if (session) {
-    locationQuery.session(session);
-  }
-  const locationDoc = await locationQuery;
+  const locationDoc = await Location.findById(locationId).lean();
   if (!locationDoc || !locationDoc.isActive) {
     throw ApiError.unprocessable('Location not found or inactive');
   }
